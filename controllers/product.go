@@ -3,7 +3,6 @@ package controllers
 import (
 	"app/models"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -49,33 +48,12 @@ func (p *Product) Create(w http.ResponseWriter, r *http.Request) {
 	price, _ := strconv.Atoi(r.FormValue("price"))
 	product.Price = price
 
-	p.DB.Create(&product)
-
-	file, handler, err := r.FormFile("image")
-	fileName := r.FormValue("image")
-	if err != nil || file == nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	path := "uploads/products/" + strconv.Itoa(int(product.ID))
-	os.Mkdir(path, 0755)
-	filename := path + "/" + handler.Filename
-	product.Image = os.Getenv("HOST") + "/" + filename
-
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	// _, _ = io.WriteString(w, "File "+fileName+" Uploaded successfully")
-	_, _ = io.Copy(f, file)
-
-	if err := p.DB.Save(product).Error; err != nil {
+	if err := p.DB.Create(&product).Error; err != nil {
 		JSON(w, http.StatusNotFound)(H{"error": err.Error()})
 	}
 
-	fmt.Print(file, fileName)
+	p.saveProductImage(r, &product)
+
 	// json.NewEncoder(w).Encode(product)
 	JSON(w, http.StatusOK)(H{"product": product})
 
@@ -101,6 +79,34 @@ func (p *Product) findProductByID(r *http.Request) (*models.Product, error) {
 	}
 
 	return &product, nil
+
+}
+
+func (p *Product) saveProductImage(r *http.Request, product *models.Product) error {
+	file, handler, err := r.FormFile("image")
+
+	if err != nil || file == nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	path := "uploads/products/" + strconv.Itoa(int(product.ID))
+	os.Mkdir(path, 0755)
+	filename := path + "/" + handler.Filename
+	product.Image = os.Getenv("HOST") + "/" + filename
+
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	// _, _ = io.WriteString(w, "File "+fileName+" Uploaded successfully")
+	_, _ = io.Copy(f, file)
+
+	if err := p.DB.Save(product).Error; err != nil {
+		return err
+	}
+	return nil
 
 }
 
