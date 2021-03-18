@@ -28,14 +28,26 @@ type productRespons struct {
 	Image string `json:"image"`
 }
 
+type pagingRespons struct {
+	Items  []productRespons `json:"items"`
+	Paging *pagingResult    `json:"paging"`
+}
+
 func (p *Product) FindAll(w http.ResponseWriter, r *http.Request) {
 	var products []models.Product
-	p.DB.Order("id desc").Find(&products)
+
+	pagination := pagination{
+		ctx:     r,
+		query:   p.DB,
+		records: &products,
+	}
+	paging := pagination.pagingResource()
+	// p.DB.Order("id desc").Find(&products)
 
 	serializedProducts := []productRespons{}
 	copier.Copy(&serializedProducts, &products)
 
-	JSON(w, http.StatusOK)(Map{"products": serializedProducts})
+	JSON(w, http.StatusOK)(Map{"products": pagingRespons{Items: serializedProducts, Paging: paging}})
 }
 
 func (p *Product) Create(w http.ResponseWriter, r *http.Request) {
