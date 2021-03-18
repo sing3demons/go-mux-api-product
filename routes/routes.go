@@ -1,22 +1,22 @@
 package routes
 
 import (
+	"app/config"
 	"app/controllers"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-func Serve() *mux.Router {
+func Serve(r *mux.Router) {
+	db := config.GetDB()
 	v1 := "/api/v1"
 
-	router := mux.NewRouter()
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World"))
-	}).Methods(http.MethodGet)
-
 	//products
-	router.HandleFunc(v1+"/products", controllers.FindAll).Methods(http.MethodGet)
+	productsController := controllers.Product{DB: db}
+	productsGroup := v1 + "/products"
+	r.HandleFunc(productsGroup, productsController.FindAll).Methods(http.MethodGet)
+	r.HandleFunc(productsGroup+"/{id}", productsController.FindOne).Methods(http.MethodGet)
+	r.HandleFunc(productsGroup, productsController.Create).Methods(http.MethodPost)
 
-	return router
 }
