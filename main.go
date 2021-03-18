@@ -28,16 +28,17 @@ func main() {
 
 	config.InitDB()
 
+	// Choose the folder to serve
+	staticDir := "uploads/"
+
 	uploadDir := [...]string{"products", "users"}
 	for _, path := range uploadDir {
 
-		os.MkdirAll("uploads/"+path, 0755)
+		os.MkdirAll(staticDir+path, 0755)
 	}
 
-	// Choose the folder to serve
-	staticDir := "/uploads/"
 	// Create the route
-	r.PathPrefix(staticDir).Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
+	r.PathPrefix("/" + staticDir).Handler(http.StripPrefix("/"+staticDir, http.FileServer(http.Dir("./"+staticDir))))
 	routes.Serve(r)
 
 	fmt.Printf("Running on port :%s \n", os.Getenv("PORT"))
