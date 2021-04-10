@@ -3,6 +3,7 @@ package routes
 import (
 	"app/config"
 	"app/controllers"
+	"app/middleware"
 	"fmt"
 	"net/http"
 
@@ -12,21 +13,20 @@ import (
 func Serve(r *mux.Router) {
 	db := config.GetDB()
 	v1 := "/api/v1"
+	authenticate := middleware.AuthMiddleware
 
 	authGroup := fmt.Sprintf(v1 + "/auth")
 	authController := controllers.Auth{DB: db}
 	{
 		r.HandleFunc(authGroup+"/sign-up", authController.SignUp)
-		r.HandleFunc(authGroup+"/sign-in", controllers.SignIn)
+		r.HandleFunc(authGroup+"/sign-in", middleware.SignIn)
 	}
 
 	//products
 	productsController := controllers.Product{DB: db}
 	productsGroup := fmt.Sprintf(v1 + "/products")
-
 	secureProduct := r.PathPrefix(productsGroup).Subrouter()
-	secureProduct.Use(controllers.Middleware)
-
+	secureProduct.Use(authenticate)
 	{
 		r.HandleFunc(productsGroup, productsController.FindAll).Methods(http.MethodGet)
 		r.HandleFunc(productsGroup+"/{id}", productsController.FindOne).Methods(http.MethodGet)
