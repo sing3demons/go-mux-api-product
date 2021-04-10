@@ -34,6 +34,10 @@ type pagingRespons struct {
 }
 
 func (p *Product) FindAll(w http.ResponseWriter, r *http.Request) {
+	// JwtVerify(w, r)
+	// AuthMiddleware(w, r)
+	// id := r.Header.Get("sub")
+	// fmt.Print(id)
 	var products []models.Product
 
 	pagination := pagination{
