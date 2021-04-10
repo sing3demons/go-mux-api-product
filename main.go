@@ -12,7 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var port string = "8080"
 
 func main() {
 	err := godotenv.Load()
@@ -36,6 +35,7 @@ func main() {
 
 		os.MkdirAll(staticDir+path, 0755)
 	}
+
 
 	// Create the route
 	r.PathPrefix("/" + staticDir).Handler(http.StripPrefix("/"+staticDir, http.FileServer(http.Dir("./"+staticDir))))

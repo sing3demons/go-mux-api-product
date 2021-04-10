@@ -38,7 +38,7 @@ func (p *pagination) pagingResource() *pagingResult {
 	go p.countRecords(ch)
 
 	offset := (page - 1) * limit
-	p.query.Limit(limit).Offset(offset).Find(p.records)
+	p.query.Limit(limit).Offset(offset).Order("id desc").Find(p.records)
 
 	count := <-ch
 	totalPage := int(math.Ceil(float64(count) / float64(limit)))
