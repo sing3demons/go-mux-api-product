@@ -24,7 +24,7 @@ type pagination struct {
 
 func (p *pagination) pagingResource() *pagingResult {
 	page, _ := strconv.Atoi(p.ctx.URL.Query().Get("page"))
-	
+
 	if page == 0 {
 		page = 1
 	}

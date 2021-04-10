@@ -128,7 +128,6 @@ func (p *Product) checkProduckImage(product *models.Product) {
 		os.Remove(pwd + product.Image)
 	}
 
-	return
 }
 
 func (p *Product) saveProductImage(r *http.Request, product *models.Product) error {
