@@ -12,7 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -32,15 +31,15 @@ func main() {
 
 	uploadDir := [...]string{"products", "users"}
 	for _, path := range uploadDir {
-
 		os.MkdirAll(staticDir+path, 0755)
 	}
-
 
 	// Create the route
 	r.PathPrefix("/" + staticDir).Handler(http.StripPrefix("/"+staticDir, http.FileServer(http.Dir("./"+staticDir))))
 	routes.Serve(r)
 
-	fmt.Printf("Running on port :%s \n", os.Getenv("PORT"))
-	http.ListenAndServe(":"+os.Getenv("PORT"), r)
+	port := fmt.Sprintf(":" + os.Getenv("PORT"))
+	fmt.Printf("Running on port %s \n", port)
+
+	http.ListenAndServe(port, r)
 }

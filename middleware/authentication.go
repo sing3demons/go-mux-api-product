@@ -89,8 +89,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		id := fmt.Sprintf("%v", claims["id"])
+		var user models.User
+		db := config.GetDB()
+		if err := db.First(&user, id).Error; err != nil {
+			fmt.Println(err.Error())
+		}
 
-		r.Header.Set("sub", id)
+		role := user.Role
+
+		r.Header.Set("id", id)
+		r.Header.Set("sub", role)
 
 		next.ServeHTTP(w, r)
 	})
