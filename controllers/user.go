@@ -58,6 +58,13 @@ func (u *Users) FindAll(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (u *Users) FindOne(w http.ResponseWriter, r *http.Request) {}
+func (u *Users) Create(w http.ResponseWriter, r *http.Request)  {}
+func (u *Users) Update(w http.ResponseWriter, r *http.Request)  {}
+func (u *Users) Delete(w http.ResponseWriter, r *http.Request)  {}
+func (u *Users) Promote(w http.ResponseWriter, r *http.Request) {}
+func (u *Users) Demote(w http.ResponseWriter, r *http.Request)  {}
+
 func setUsersImage(r *http.Request, user *models.User) {
 	file, handler, err := r.FormFile("avatar")
 	if file == nil || err != nil {

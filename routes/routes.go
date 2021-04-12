@@ -14,6 +14,7 @@ func Serve(r *mux.Router) {
 	db := config.GetDB()
 	v1 := "/api/v1"
 	authenticate := middleware.AuthMiddleware
+	authorize := middleware.Authorize
 
 	authGroup := fmt.Sprintf(v1 + "/auth")
 	authController := controllers.Auth{DB: db}
@@ -23,8 +24,9 @@ func Serve(r *mux.Router) {
 	}
 	secureAuth := r.PathPrefix(authGroup).Subrouter()
 	secureAuth.Use(authenticate)
+
 	{
-		secureAuth.HandleFunc("", authController.GetProfile).Methods("GET")
+		secureAuth.HandleFunc("/profile", authController.GetProfile).Methods("GET")
 		secureAuth.HandleFunc("/profile", authController.UpdateImageProfile).Methods(http.MethodPatch)
 		secureAuth.HandleFunc("/profile", authController.UpdateProfile).Methods("PUT")
 	}
@@ -34,6 +36,7 @@ func Serve(r *mux.Router) {
 	productsGroup := fmt.Sprintf(v1 + "/products")
 	secureProduct := r.PathPrefix(productsGroup).Subrouter()
 	secureProduct.Use(authenticate)
+	secureProduct.Use(authorize)
 	{
 		r.HandleFunc(productsGroup, productsController.FindAll).Methods(http.MethodGet)
 		r.HandleFunc(productsGroup+"/{id}", productsController.FindOne).Methods(http.MethodGet)
@@ -47,8 +50,15 @@ func Serve(r *mux.Router) {
 
 	secureUsers := r.PathPrefix(usersGroup).Subrouter()
 	secureUsers.Use(authenticate)
+	secureUsers.Use(authorize)
 	{
 		secureUsers.HandleFunc("", usersController.FindAll).Methods(http.MethodGet)
+		secureUsers.HandleFunc("", usersController.Create).Methods(http.MethodPost)
+		secureUsers.HandleFunc("/{id}", usersController.FindOne).Methods(http.MethodGet)
+		secureUsers.HandleFunc("/{id}", usersController.Update).Methods(http.MethodPut)
+		secureUsers.HandleFunc("/{id}", usersController.Delete).Methods(http.MethodDelete)
+		secureUsers.HandleFunc("/{id}/promote", usersController.Promote).Methods(http.MethodPatch)
+		secureUsers.HandleFunc("/{id}/demote", usersController.Demote).Methods(http.MethodPatch)
 	}
 
 }

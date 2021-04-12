@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -18,13 +19,17 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	config.InitDB()
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World"))
 	}).Methods(http.MethodGet)
 
-	config.InitDB()
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	originsOk := handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	// Choose the folder to serve
 	staticDir := "uploads/"
@@ -41,5 +46,5 @@ func main() {
 	port := fmt.Sprintf(":" + os.Getenv("PORT"))
 	fmt.Printf("Running on port %s \n", port)
 
-	http.ListenAndServe(port, r)
+	http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(r))
 }
