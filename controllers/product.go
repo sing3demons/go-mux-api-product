@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"app/models"
 	"encoding/json"
+	"github/sing3demons/go_mux_api/models"
 	"io"
 	"net/http"
 	"os"
@@ -17,7 +17,8 @@ import (
 type Map map[string]interface{}
 
 type Product struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	Map map[string]interface{}
 }
 
 type productRespons struct {

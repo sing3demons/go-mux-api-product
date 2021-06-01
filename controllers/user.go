@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"app/config"
-	"app/models"
 	"fmt"
+	"github/sing3demons/go_mux_api/config"
+	"github/sing3demons/go_mux_api/models"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
@@ -40,7 +41,7 @@ type userResponse struct {
 }
 
 func (u *Users) FindAll(w http.ResponseWriter, r *http.Request) {
-	role := r.Header.Get("sub")
+	role := r.Header.Get("role")
 
 	if role != "Admin" {
 		JSON(w, http.StatusForbidden)(Map{"error": "forbindeb"})
@@ -58,17 +59,27 @@ func (u *Users) FindAll(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (u *Users) FindOne(w http.ResponseWriter, r *http.Request) {}
-func (u *Users) Create(w http.ResponseWriter, r *http.Request)  {}
-func (u *Users) Update(w http.ResponseWriter, r *http.Request)  {}
-func (u *Users) Delete(w http.ResponseWriter, r *http.Request)  {}
-func (u *Users) Promote(w http.ResponseWriter, r *http.Request) {}
-func (u *Users) Demote(w http.ResponseWriter, r *http.Request)  {}
+func (u *Users) FindOne(w http.ResponseWriter, r *http.Request) {
+	user, err := u.findUserByID(r)
+	if err != nil {
+		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+	}
+	var serializedUser []userResponse
+	copier.Copy(&serializedUser, &user)
+	JSON(w, http.StatusOK)(Map{"user": serializedUser})
+}
+func (u *Users) Create(w http.ResponseWriter, r *http.Request) {}
+func (u *Users) Update(w http.ResponseWriter, r *http.Request) {}
+func (u *Users) Delete(w http.ResponseWriter, r *http.Request) {}
+func (u *Users) Promote(w http.ResponseWriter, r *http.Request) {
 
-func setUsersImage(r *http.Request, user *models.User) {
+}
+func (u *Users) Demote(w http.ResponseWriter, r *http.Request) {}
+
+func setUsersImage(w http.ResponseWriter, r *http.Request, user *models.User) {
 	file, handler, err := r.FormFile("avatar")
 	if file == nil || err != nil {
-		fmt.Errorf(err.Error())
+		JSON(w, http.StatusUnprocessableEntity)(Map{"error": err.Error()})
 		return
 	}
 	defer file.Close()
@@ -96,4 +107,13 @@ func setUsersImage(r *http.Request, user *models.User) {
 		fmt.Errorf(err.Error())
 		return
 	}
+}
+
+func (u *Users) findUserByID(r *http.Request) (*models.User, error) {
+	id := mux.Vars(r)["id"]
+	var user models.User
+	if err := u.DB.First(&user, id).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

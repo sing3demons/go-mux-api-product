@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"app/models"
 	"encoding/json"
+	"github/sing3demons/go_mux_api/models"
 	"net/http"
 
 	"github.com/jinzhu/copier"
@@ -60,7 +60,7 @@ func (a *Auth) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	if form.Name == "" {
 		form.Name = user.Name
 	}
-	
+
 	form.Email = r.FormValue("email")
 	if form.Email == "" {
 		form.Email = user.Email
@@ -68,7 +68,7 @@ func (a *Auth) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	a.DB.Model(&user).Updates(map[string]interface{}{"name": form.Name, "email": form.Email})
 
-	setUsersImage(r, &user)
+	setUsersImage(w, r, &user)
 
 	var serializedUser userResponse
 	copier.Copy(&serializedUser, &user)
@@ -82,7 +82,7 @@ func (a *Auth) UpdateImageProfile(w http.ResponseWriter, r *http.Request) {
 
 	a.DB.First(&user, id)
 
-	setUsersImage(r, &user)
+	setUsersImage(w, r, &user)
 	JSON(w, http.StatusCreated)(Map{"message": "success"})
 
 }

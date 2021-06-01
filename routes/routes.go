@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"app/config"
-	"app/controllers"
-	"app/middleware"
 	"fmt"
+	"github/sing3demons/go_mux_api/config"
+	"github/sing3demons/go_mux_api/controllers"
+	"github/sing3demons/go_mux_api/middleware"
 	"net/http"
 
 	"github.com/gorilla/mux"

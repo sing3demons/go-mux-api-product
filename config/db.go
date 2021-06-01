@@ -1,16 +1,24 @@
 package config
 
 import (
-	"app/models"
+	"fmt"
+	"github/sing3demons/go_mux_api/models"
+	"os"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var db *gorm.DB
 
 func InitDB() {
-	database, err := gorm.Open(sqlite.Open("db.db"), &gorm.Config{})
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	pass := os.Getenv("DB_PASSWORD")
+	name := os.Getenv("DB_NAME")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=disable TimeZone=Asia/Bangkok", host, user, pass, name)
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}

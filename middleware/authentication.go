@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"app/config"
-	"app/models"
 	"encoding/json"
 	"fmt"
+	"github/sing3demons/go_mux_api/config"
+	"github/sing3demons/go_mux_api/models"
 	"net/http"
 	"os"
 	"strings"
@@ -95,10 +95,16 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			fmt.Println(err.Error())
 		}
 
+		name := user.Name
+		email := user.Email
+		avatar := user.Avatar
 		role := user.Role
 
 		r.Header.Set("id", id)
-		r.Header.Set("sub", role)
+		r.Header.Set("name", name)
+		r.Header.Set("email", email)
+		r.Header.Set("avatar", avatar)
+		r.Header.Set("role", role)
 
 		next.ServeHTTP(w, r)
 	})

@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"app/config"
-	"app/models"
+	"github/sing3demons/go_mux_api/config"
+	"github/sing3demons/go_mux_api/models"
 	"net/http"
 
 	"github.com/casbin/casbin"
