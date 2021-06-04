@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"github/sing3demons/go_mux_api/config"
 	"github/sing3demons/go_mux_api/routes"
@@ -28,13 +27,8 @@ func main() {
 
 	config.InitDB()
 
-	r := mux.NewRouter()
+	r := mux.NewRouter().StrictSlash(true)
 	r.Use(handlers.RecoveryHandler(handlers.PrintRecoveryStack(true)))
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]interface{}{"message": "rest api golang"})
-	}).Methods(http.MethodGet)
 
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
 	originsOk := handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
@@ -45,7 +39,7 @@ func main() {
 
 	uploadDir := [...]string{"products", "users"}
 	for _, path := range uploadDir {
-		os.MkdirAll(staticDir + "/" +path, 0755)
+		os.MkdirAll(staticDir+"/"+path, 0755)
 	}
 
 	// Create the route
@@ -59,8 +53,6 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-
-
 
 	log.Printf("Running on port : %s  \n", os.Getenv("PORT"))
 	log.Fatal(srv.ListenAndServe())

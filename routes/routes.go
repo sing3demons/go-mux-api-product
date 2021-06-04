@@ -5,6 +5,7 @@ import (
 	"github/sing3demons/go_mux_api/config"
 	"github/sing3demons/go_mux_api/controllers"
 	"github/sing3demons/go_mux_api/middleware"
+	"github/sing3demons/go_mux_api/utils"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,6 +16,12 @@ func Serve(r *mux.Router) {
 	v1 := "/api/v1"
 	authenticate := middleware.AuthMiddleware
 	authorize := middleware.Authorize
+
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		utils.JSON(w, http.StatusOK)(map[string]interface{}{"message": "rest api golang"})
+	}).Methods(http.MethodGet)
 
 	authGroup := fmt.Sprintf(v1 + "/auth")
 	authController := controllers.Auth{DB: db}
@@ -32,7 +39,7 @@ func Serve(r *mux.Router) {
 	}
 
 	//products
-	productsController := controllers.Product{DB: db}
+	productsController := controllers.NewProductController(db)
 	productsGroup := fmt.Sprintf(v1 + "/products")
 	secureProduct := r.PathPrefix(productsGroup).Subrouter()
 	secureProduct.Use(authenticate)

@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"fmt"
 	"github/sing3demons/go_mux_api/config"
 	"github/sing3demons/go_mux_api/models"
+	"github/sing3demons/go_mux_api/utils"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -18,12 +19,6 @@ import (
 
 type Users struct {
 	DB *gorm.DB
-}
-
-type createUserForm struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
 }
 
 type updateUserForm struct {
@@ -44,29 +39,29 @@ func (u *Users) FindAll(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("role")
 
 	if role != "Admin" {
-		JSON(w, http.StatusForbidden)(Map{"error": "forbindeb"})
+		utils.JSON(w, http.StatusForbidden)(Map{"error": "forbindeb"})
 		return
 	}
 
 	var users []models.User
 	if err := u.DB.Find(&users).Error; err != nil {
-		JSON(w, http.StatusUnauthorized)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusUnauthorized)(Map{"error": err.Error()})
 		return
 	}
 	var serializedUsers []userResponse
 	copier.Copy(&serializedUsers, &users)
-	JSON(w, http.StatusOK)(Map{"users": serializedUsers})
+	utils.JSON(w, http.StatusOK)(Map{"users": serializedUsers})
 
 }
 
 func (u *Users) FindOne(w http.ResponseWriter, r *http.Request) {
 	user, err := u.findUserByID(r)
 	if err != nil {
-		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
 	}
 	var serializedUser []userResponse
 	copier.Copy(&serializedUser, &user)
-	JSON(w, http.StatusOK)(Map{"user": serializedUser})
+	utils.JSON(w, http.StatusOK)(Map{"user": serializedUser})
 }
 func (u *Users) Create(w http.ResponseWriter, r *http.Request) {}
 func (u *Users) Update(w http.ResponseWriter, r *http.Request) {}
@@ -79,7 +74,7 @@ func (u *Users) Demote(w http.ResponseWriter, r *http.Request) {}
 func setUsersImage(w http.ResponseWriter, r *http.Request, user *models.User) {
 	file, handler, err := r.FormFile("avatar")
 	if file == nil || err != nil {
-		JSON(w, http.StatusUnprocessableEntity)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusUnprocessableEntity)(Map{"error": err.Error()})
 		return
 	}
 	defer file.Close()
@@ -97,14 +92,14 @@ func setUsersImage(w http.ResponseWriter, r *http.Request, user *models.User) {
 
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Errorf(err.Error())
+		log.Fatal(err.Error())
 		return
 	}
 	defer f.Close()
 	_, _ = io.Copy(f, file)
 
 	if err := config.GetDB().Save(user).Error; err != nil {
-		fmt.Errorf(err.Error())
+		log.Fatal(err.Error())
 		return
 	}
 }

@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"encoding/json"
 	"github/sing3demons/go_mux_api/models"
+	"github/sing3demons/go_mux_api/utils"
 	"io"
 	"net/http"
 	"os"
@@ -14,12 +14,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type Map map[string]interface{}
-
-type Product struct {
-	DB  *gorm.DB
-	Map map[string]interface{}
+type ProductController interface {
+	FindAll(w http.ResponseWriter, r *http.Request)
+	Create(w http.ResponseWriter, r *http.Request)
+	FindOne(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
 }
+
+type productController struct {
+	DB *gorm.DB
+}
+
+func NewProductController(db *gorm.DB) ProductController {
+	return &productController{DB: db}
+}
+
 
 type productRespons struct {
 	ID    uint   `json:"id"`
@@ -34,7 +44,7 @@ type pagingRespons struct {
 	Paging *pagingResult    `json:"paging"`
 }
 
-func (p *Product) FindAll(w http.ResponseWriter, r *http.Request) {
+func (p *productController) FindAll(w http.ResponseWriter, r *http.Request) {
 	// JwtVerify(w, r)
 	// AuthMiddleware(w, r)
 	// id := r.Header.Get("sub")
@@ -52,10 +62,10 @@ func (p *Product) FindAll(w http.ResponseWriter, r *http.Request) {
 	serializedProducts := []productRespons{}
 	copier.Copy(&serializedProducts, &products)
 
-	JSON(w, http.StatusOK)(Map{"products": pagingRespons{Items: serializedProducts, Paging: paging}})
+	utils.JSON(w, http.StatusOK)(Map{"products": pagingRespons{Items: serializedProducts, Paging: paging}})
 }
 
-func (p *Product) Create(w http.ResponseWriter, r *http.Request) {
+func (p *productController) Create(w http.ResponseWriter, r *http.Request) {
 	var product models.Product
 
 	product.Name = r.FormValue("name")
@@ -63,30 +73,30 @@ func (p *Product) Create(w http.ResponseWriter, r *http.Request) {
 	product.Price, _ = strconv.Atoi(r.FormValue("price"))
 
 	if err := p.DB.Create(&product).Error; err != nil {
-		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
 	}
 
 	p.saveProductImage(r, &product)
 
-	JSON(w, http.StatusOK)(Map{"product": product})
+	utils.JSON(w, http.StatusOK)(Map{"product": product})
 
 }
 
-func (p *Product) FindOne(w http.ResponseWriter, r *http.Request) {
+func (p *productController) FindOne(w http.ResponseWriter, r *http.Request) {
 	product, err := p.findProductByID(r)
 	if err != nil {
-		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
 	}
 
 	serializedProduct := []productRespons{}
 	copier.Copy(&serializedProduct, &product)
-	JSON(w, http.StatusOK)(Map{"product": serializedProduct})
+	utils.JSON(w, http.StatusOK)(Map{"product": serializedProduct})
 }
 
-func (p *Product) Update(w http.ResponseWriter, r *http.Request) {
+func (p *productController) Update(w http.ResponseWriter, r *http.Request) {
 	product, err := p.findProductByID(r)
 	if err != nil {
-		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
 	}
 
 	product.Name = r.FormValue("name")
@@ -94,27 +104,27 @@ func (p *Product) Update(w http.ResponseWriter, r *http.Request) {
 	product.Price, _ = strconv.Atoi(r.FormValue("price"))
 
 	if err := p.DB.Save(&product).Error; err != nil {
-		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
 	}
 
 	p.saveProductImage(r, product)
 
-	JSON(w, http.StatusOK)(Map{"message": "update success"})
+	utils.JSON(w, http.StatusOK)(Map{"message": "update success"})
 
 }
 
-func (p *Product) Delete(w http.ResponseWriter, r *http.Request) {
+func (p *productController) Delete(w http.ResponseWriter, r *http.Request) {
 	product, err := p.findProductByID(r)
 	if err != nil {
-		JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
+		utils.JSON(w, http.StatusNotFound)(Map{"error": err.Error()})
 	}
 
 	p.DB.Unscoped().Delete(&product)
 
-	JSON(w, http.StatusOK)(Map{"message": "deleted..."})
+	utils.JSON(w, http.StatusOK)(Map{"message": "deleted..."})
 }
 
-func (p *Product) findProductByID(r *http.Request) (*models.Product, error) {
+func (p *productController) findProductByID(r *http.Request) (*models.Product, error) {
 	var product models.Product
 	id := mux.Vars(r)["id"]
 
@@ -126,7 +136,7 @@ func (p *Product) findProductByID(r *http.Request) (*models.Product, error) {
 
 }
 
-func (p *Product) checkProduckImage(product *models.Product) {
+func (p *productController) checkProduckImage(product *models.Product) {
 	if product.Image != "" {
 		product.Image = strings.Replace(product.Image, os.Getenv("HOST"), "", 1)
 		pwd, _ := os.Getwd()
@@ -135,7 +145,7 @@ func (p *Product) checkProduckImage(product *models.Product) {
 
 }
 
-func (p *Product) saveProductImage(r *http.Request, product *models.Product) error {
+func (p *productController) saveProductImage(r *http.Request, product *models.Product) error {
 	file, handler, err := r.FormFile("image")
 
 	if err != nil || file == nil {
@@ -163,12 +173,4 @@ func (p *Product) saveProductImage(r *http.Request, product *models.Product) err
 	}
 	return nil
 
-}
-
-func JSON(w http.ResponseWriter, statusCode int) func(v interface{}) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	return func(v interface{}) error {
-		return json.NewEncoder(w).Encode(v)
-	}
 }
