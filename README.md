@@ -1,4 +1,7 @@
 # go-mux-api-product
 ```
-docker-compose up --build
+docker-compose up -d
+```
+```
+go run main.go
 ```

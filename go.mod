@@ -3,6 +3,7 @@ module github/sing3demons/go_mux_api
 go 1.16
 
 require (
+	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/casbin/casbin v1.9.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gorilla/handlers v1.5.1

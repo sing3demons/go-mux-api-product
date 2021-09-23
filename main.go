@@ -26,6 +26,8 @@ func main() {
 	flag.Parse()
 
 	config.InitDB()
+	//seeds
+	// seeds.Setup()
 
 	r := mux.NewRouter().StrictSlash(true)
 	r.Use(handlers.RecoveryHandler(handlers.PrintRecoveryStack(true)))
